@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Hostel Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="dashboard-card">
+                <h2 class="mb-4">
+                    <i class="fas fa-cog me-2"></i>System Settings
+                </h2>
+                <p class="text-muted">Manage hostel system configuration</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="dashboard-card">
+                <h4 class="mb-4">General Settings</h4>
+                
+                <div class="mb-3">
+                    <label class="form-label">Hostel Name</label>
+                    <input type="text" class="form-control" value="University Hostel" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Academic Year</label>
+                    <input type="text" class="form-control" value="2024-2025" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Default Room Rent</label>
+                    <input type="number" class="form-control" value="5000" readonly>
+                </div>
+
+                <button class="btn btn-primary" disabled>
+                    <i class="fas fa-save me-2"></i>Save Changes
+                </button>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="dashboard-card">
+                <h4 class="mb-4">ML Model Management</h4>
+                
+                <div class="mb-3">
+                    <label class="form-label">Retrain ML Models</label>
+                    <div>
+                        <button class="btn btn-outline-warning w-100 mb-2" disabled>
+                            <i class="fas fa-brain me-2"></i>Retrain Sentiment Analyzer
+                        </button>
+                        <button class="btn btn-outline-info w-100 mb-2" disabled>
+                            <i class="fas fa-chart-line me-2"></i>Retrain Occupancy Predictor
+                        </button>
+                        <button class="btn btn-outline-danger w-100" disabled>
+                            <i class="fas fa-exclamation-triangle me-2"></i>Retrain Complaint Classifier
+                        </button>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    ML models are automatically trained and updated. Manual retraining is currently disabled.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

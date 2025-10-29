@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Hostel Management System{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Welcome to Hostel Management System</h1>
+                <p class="lead mb-4">AI-powered platform for efficient hostel operations, complaint management, and student satisfaction.</p>
+                {% if not current_user.is_authenticated %}
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Get Started
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                </div>
+                {% else %}
+                <div class="d-flex gap-3">
+                    {% if current_user.is_admin() %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('student_dashboard') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i>Student Dashboard
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="fas fa-hotel" style="font-size: 200px; opacity: 0.8;"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="container">
+    <div class="row text-center mb-5">
+        <div class="col">
+            <h2 class="fw-bold">Key Features</h2>
+            <p class="text-muted">Comprehensive solutions for modern hostel management</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Feature 1 -->
+        <div class="col-md-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-brain text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title">AI-Powered Insights</h4>
+                    <p class="card-text">Machine learning models for sentiment analysis, occupancy prediction, and smart complaint classification.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Feature 2 -->
+        <div class="col-md-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-bed text-success" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title">Room Management</h4>
+                    <p class="card-text">Efficient room allocation, booking system, and availability tracking with real-time updates.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Feature 3 -->
+        <div class="col-md-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-comments text-info" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title">Complaint System</h4>
+                    <p class="card-text">Automated complaint categorization and priority assignment for faster resolution.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Feature 4 -->
+        <div class="col-md-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-chart-line text-warning" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title">Analytics Dashboard</h4>
+                    <p class="card-text">Comprehensive reports and analytics for better decision making and resource allocation.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Feature 5 -->
+        <div class="col-md-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-star text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title">Feedback Analysis</h4>
+                    <p class="card-text">Sentiment analysis on student feedback to improve services and address concerns proactively.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Feature 6 -->
+        <div class="col-md-4">
+            <div class="card feature-card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-mobile-alt text-secondary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title">User-Friendly Interface</h4>
+                    <p class="card-text">Responsive design that works seamlessly on desktop, tablet, and mobile devices.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="bg-light py-5 mt-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3">
+                <h3 class="fw-bold text-primary">500+</h3>
+                <p class="text-muted">Students Managed</p>
+            </div>
+            <div class="col-md-3">
+                <h3 class="fw-bold text-success">95%</h3>
+                <p class="text-muted">Complaint Resolution Rate</p>
+            </div>
+            <div class="col-md-3">
+                <h3 class="fw-bold text-info">24/7</h3>
+                <p class="text-muted">System Availability</p>
+            </div>
+            <div class="col-md-3">
+                <h3 class="fw-bold text-warning">AI</h3>
+                <p class="text-muted">Powered Insights</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

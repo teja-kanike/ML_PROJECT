@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookings - Hostel Management System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="dashboard-card">
+                <h2 class="mb-4">
+                    <i class="fas fa-calendar-alt me-2"></i>My Bookings
+                </h2>
+                <p class="text-muted">View your room booking history and status</p>
+            </div>
+        </div>
+    </div>
+
+    {% if bookings %}
+    <div class="row">
+        <div class="col">
+            <div class="dashboard-card">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Room</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Duration</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Food</th>
+                                <th>Booking Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings %}
+                            <tr>
+                                <td>
+                                    <strong>Room {{ booking.room.room_number }}</strong><br>
+                                    <small class="text-muted">{{ booking.room.seater_type }} Seater</small>
+                                </td>
+                                <td>{{ booking.check_in_date }}</td>
+                                <td>{{ booking.check_out_date }}</td>
+                                <td>
+                                    {% set days = (booking.check_out_date - booking.check_in_date).days %}
+                                    {{ days }} days
+                                </td>
+                                <td>₹{{ "%.2f"|format(booking.total_amount or 0) }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 
+                                        'success' if booking.status == 'confirmed' 
+                                        else 'warning' if booking.status == 'pending' 
+                                        else 'secondary' if booking.status == 'completed'
+                                        else 'danger' 
+                                    }}">
+                                        {{ booking.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if booking.food_option == 'veg' else 'danger' }}">
+                                        {{ booking.food_option|title }}
+                                    </span>
+                                </td>
+                                <td>{{ booking.booking_date.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col">
+            <div class="dashboard-card text-center">
+                <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                <h4>No Bookings Found</h4>
+                <p class="text-muted">You haven't made any room bookings yet.</p>
+                <a href="{{ url_for('student_rooms') }}" class="btn btn-primary">
+                    <i class="fas fa-bed me-2"></i>Book a Room
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

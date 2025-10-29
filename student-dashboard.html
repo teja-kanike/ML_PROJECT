@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Student Dashboard</a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3" id="studentName"></span>
+                <button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action active" onclick="showSection('profile')">My Profile</a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="showSection('bookRoom')">Book Room</a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="showSection('complaints')">Complaints</a>
+                    <a href="#" class="list-group-item list-group-item-action" onclick="showSection('feedback')">Feedback</a>
+                </div>
+            </div>
+            
+            <div class="col-md-9">
+                <!-- Profile Section -->
+                <div id="profileSection" class="section">
+                    <h4>My Profile</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <div id="profileInfo"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Book Room Section -->
+                <div id="bookRoomSection" class="section" style="display: none;">
+                    <h4>Book Hostel Room</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <div id="availableRooms"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Complaints Section -->
+                <div id="complaintsSection" class="section" style="display: none;">
+                    <h4>Complaint Management</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <button class="btn btn-primary mb-3" onclick="showComplaintForm()">Lodge New Complaint</button>
+                            <div id="complaintForm" style="display: none;">
+                                <form id="newComplaintForm">
+                                    <div class="mb-3">
+                                        <label class="form-label">Title</label>
+                                        <input type="text" class="form-control" id="complaintTitle" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Description</label>
+                                        <textarea class="form-control" id="complaintDescription" rows="3" required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-success">Submit Complaint</button>
+                                    <button type="button" class="btn btn-secondary" onclick="hideComplaintForm()">Cancel</button>
+                                </form>
+                                <hr>
+                            </div>
+                            <div id="myComplaints"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Section -->
+                <div id="feedbackSection" class="section" style="display: none;">
+                    <h4>Feedback</h4>
+                    <div class="card">
+                        <div class="card-body">
+                            <form id="feedbackForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Rating</label>
+                                    <select class="form-control" id="feedbackRating" required>
+                                        <option value="">Select Rating</option>
+                                        <option value="5">Excellent</option>
+                                        <option value="4">Very Good</option>
+                                        <option value="3">Good</option>
+                                        <option value="2">Average</option>
+                                        <option value="1">Poor</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Comments</label>
+                                    <textarea class="form-control" id="feedbackComments" rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStudent = null;
+
+        // Check if student is logged in
+        window.onload = function() {
+            const studentData = localStorage.getItem('student');
+            if (!studentData) {
+                window.location.href = 'student-login.html';
+                return;
+            }
+            
+            currentStudent = JSON.parse(studentData);
+            document.getElementById('studentName').textContent = `Welcome, ${currentStudent.name}`;
+            loadProfile();
+            loadAvailableRooms();
+            loadComplaints();
+        };
+
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName + 'Section').style.display = 'block';
+        }
+
+        function loadProfile() {
+            document.getElementById('profileInfo').innerHTML = `
+                <p><strong>Student ID:</strong> ${currentStudent.student_id}</p>
+                <p><strong>Name:</strong> ${currentStudent.name}</p>
+                <p><strong>Email:</strong> ${currentStudent.email}</p>
+            `;
+        }
+
+        async function loadAvailableRooms() {
+            try {
+                const response = await fetch('http://localhost:5000/api/rooms/available');
+                const rooms = await response.json();
+                
+                let roomsHTML = '<h5>Available Rooms</h5>';
+                if (rooms.length > 0) {
+                    rooms.forEach(room => {
+                        roomsHTML += `
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5>Room ${room.room_number}</h5>
+                                    <p>Seater: ${room.seater_type} | Monthly Fee: ₹${room.monthly_fee}</p>
+                                    <p>Amenities: ${room.amenities || 'Standard'}</p>
+                                    <button class="btn btn-primary btn-sm" onclick="bookRoom(${room.id})">Book This Room</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    roomsHTML = '<p>No rooms available at the moment.</p>';
+                }
+                
+                document.getElementById('availableRooms').innerHTML = roomsHTML;
+            } catch (error) {
+                console.error('Error loading rooms:', error);
+            }
+        }
+
+        async function bookRoom(roomId) {
+            const duration = prompt('Enter duration in months:');
+            const foodOption = prompt('Enter food option (veg/non-veg/both):');
+            
+            if (duration && foodOption) {
+                try {
+                    const response = await fetch('http://localhost:5000/api/rooms/book', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            student_id: currentStudent.id,
+                            room_id: roomId,
+                            duration_months: parseInt(duration),
+                            food_option: foodOption
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        alert('Room booked successfully! Total fee: ₹' + data.total_fee);
+                        loadAvailableRooms();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            }
+        }
+
+        function showComplaintForm() {
+            document.getElementById('complaintForm').style.display = 'block';
+        }
+
+        function hideComplaintForm() {
+            document.getElementById('complaintForm').style.display = 'none';
+        }
+
+        async function loadComplaints() {
+            // Implementation for loading student's complaints
+            document.getElementById('myComplaints').innerHTML = '<p>Your complaints will appear here.</p>';
+        }
+
+        document.getElementById('newComplaintForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                student_id: currentStudent.id,
+                title: document.getElementById('complaintTitle').value,
+                description: document.getElementById('complaintDescription').value
+            };
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/complaints/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Complaint submitted successfully! Predicted category: ' + data.predicted_category);
+                    hideComplaintForm();
+                    document.getElementById('newComplaintForm').reset();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        document.getElementById('feedbackForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                student_id: currentStudent.id,
+                rating: document.getElementById('feedbackRating').value,
+                comments: document.getElementById('feedbackComments').value
+            };
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/feedback/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Feedback submitted successfully! Sentiment: ' + data.sentiment);
+                    document.getElementById('feedbackForm').reset();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('student');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

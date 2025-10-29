@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - Hostel Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="dashboard-card">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h2 class="mb-1">Welcome, {{ student.full_name }}!</h2>
+                        <p class="text-muted mb-0">Here's your hostel management dashboard</p>
+                    </div>
+                    <div class="col-auto">
+                        <div class="bg-primary text-white rounded-circle p-3">
+                            <i class="fas fa-user-graduate fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="dashboard-card" style="border-left-color: #28a745;">
+                <div class="d-flex align-items-center">
+                    <div class="bg-success text-white rounded-circle p-3 me-3">
+                        <i class="fas fa-bed fa-lg"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">{{ active_bookings }}</h4>
+                        <small class="text-muted">Active Bookings</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="dashboard-card" style="border-left-color: #ffc107;">
+                <div class="d-flex align-items-center">
+                    <div class="bg-warning text-white rounded-circle p-3 me-3">
+                        <i class="fas fa-clock fa-lg"></i>
+                    </div>
+                    <div>
+                        {% set pending_bookings_count = recent_bookings|selectattr("status", "equalto", "pending")|list|length %}
+                        <h4 class="mb-0">{{ pending_bookings_count }}</h4>
+                        <small class="text-muted">Pending Bookings</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="dashboard-card" style="border-left-color: #17a2b8;">
+                <div class="d-flex align-items-center">
+                    <div class="bg-info text-white rounded-circle p-3 me-3">
+                        <i class="fas fa-exclamation-circle fa-lg"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">{{ pending_complaints }}</h4>
+                        <small class="text-muted">Pending Complaints</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="dashboard-card" style="border-left-color: #6c757d;">
+                <div class="d-flex align-items-center">
+                    <div class="bg-secondary text-white rounded-circle p-3 me-3">
+                        <i class="fas fa-star fa-lg"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">{{ total_feedback }}</h4>
+                        <small class="text-muted">Feedback Given</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="dashboard-card">
+                <h4 class="mb-4">Quick Actions</h4>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('student_rooms') }}" class="btn btn-outline-primary w-100 py-3">
+                            <i class="fas fa-bed fa-2x mb-2"></i><br>
+                            Book Room
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('student_complaints') }}" class="btn btn-outline-warning w-100 py-3">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>
+                            Lodge Complaint
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('student_feedback') }}" class="btn btn-outline-info w-100 py-3">
+                            <i class="fas fa-star fa-2x mb-2"></i><br>
+                            Give Feedback
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('student_bookings') }}" class="btn btn-outline-success w-100 py-3">
+                            <i class="fas fa-file-invoice-dollar fa-2x mb-2"></i><br>
+                            My Bookings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="dashboard-card">
+                <h4 class="mb-4">Recent Bookings</h4>
+                {% if recent_bookings %}
+                <div class="list-group">
+                    {% for booking in recent_bookings %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Room {{ booking.room.room_number }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ booking.room.seater_type }} Seater • 
+                                    {{ booking.check_in_date }} to {{ booking.check_out_date }}
+                                </small>
+                                <br>
+                                <small>
+                                    <strong>Amount:</strong> ₹{{ "%.2f"|format(booking.total_amount or 0) }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-{{ 
+                                    'success' if booking.status == 'confirmed' 
+                                    else 'warning' if booking.status == 'pending' 
+                                    else 'secondary' if booking.status == 'completed'
+                                    else 'danger' 
+                                }} mb-2">
+                                    {{ booking.status|title }}
+                                </span>
+                                <br>
+                                <small class="text-muted">
+                                    {{ booking.booking_date.strftime('%Y-%m-%d') }}
+                                </small>
+                            </div>
+                        </div>
+                        {% if booking.status == 'pending' %}
+                        <div class="mt-2">
+                            <small class="text-warning">
+                                <i class="fas fa-clock me-1"></i>
+                                Under review - AI system processing
+                            </small>
+                        </div>
+                        {% elif booking.status == 'confirmed' %}
+                        <div class="mt-2">
+                            <small class="text-success">
+                                <i class="fas fa-robot me-1"></i>
+                                Automatically approved by AI
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-bed fa-3x text-muted mb-3"></i>
+                    <h5>No Bookings Yet</h5>
+                    <p class="text-muted">You haven't made any room bookings yet.</p>
+                    <a href="{{ url_for('student_rooms') }}" class="btn btn-primary">
+                        <i class="fas fa-bed me-2"></i>Book a Room
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="dashboard-card">
+                <h4 class="mb-4">Recent Complaints</h4>
+                {% if recent_complaints %}
+                <div class="list-group">
+                    {% for complaint in recent_complaints %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span>{{ complaint.title }}</span>
+                            <span class="badge bg-{{ 'warning' if complaint.status == 'new' else 'success' if complaint.status == 'resolved' else 'info' }}">
+                                {{ complaint.status|replace('_', ' ')|title }}
+                            </span>
+                        </div>
+                        <small class="text-muted">
+                            Category: {{ complaint.category|title }} • 
+                            Priority: <span class="text-{{ 'danger' if complaint.priority == 'high' else 'warning' if complaint.priority == 'medium' else 'secondary' }}">
+                                {{ complaint.priority|title }}
+                            </span> • 
+                            {{ complaint.created_at.strftime('%Y-%m-%d') }}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No complaints submitted yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ML Booking Status Explanation -->
+    <div class="row mt-4">
+        <div class="col">
+            <div class="dashboard-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-robot me-2"></i>AI-Powered Booking System
+                </h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center p-3">
+                            <div class="bg-success text-white rounded-circle p-3 mb-3 mx-auto" style="width: 80px; height: 80px;">
+                                <i class="fas fa-check fa-2x"></i>
+                            </div>
+                            <h6>Auto-Approved</h6>
+                            <p class="text-muted small">Bookings automatically confirmed by AI based on availability and student profile</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3">
+                            <div class="bg-warning text-white rounded-circle p-3 mb-3 mx-auto" style="width: 80px; height: 80px;">
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                            <h6>Under Review</h6>
+                            <p class="text-muted small">Bookings being reviewed by AI system for approval</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3">
+                            <div class="bg-info text-white rounded-circle p-3 mb-3 mx-auto" style="width: 80px; height: 80px;">
+                                <i class="fas fa-brain fa-2x"></i>
+                            </div>
+                            <h6>AI Decision</h6>
+                            <p class="text-muted small">Machine Learning analyzes multiple factors to make instant decisions</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.list-group-item {
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+    transform: translateX(5px);
+    border-left-color: #007bff;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+</style>
+
+<script>
+// Auto-refresh the page every 30 seconds to update booking status
+setInterval(() => {
+    console.log('Auto-refreshing dashboard to check booking status...');
+    location.reload();
+}, 30000);
+
+// Show notification if there are pending bookings
+document.addEventListener('DOMContentLoaded', function() {
+    const pendingBookings = document.querySelectorAll('.badge.bg-warning');
+    if (pendingBookings.length > 0) {
+        console.log(`Found ${pendingBookings.length} pending bookings`);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Feedback - Hostel Management System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="dashboard-card">
+                <h2 class="mb-4">
+                    <i class="fas fa-star me-2"></i>Submit Feedback
+                </h2>
+                <p class="text-muted">Help us improve by sharing your experience</p>
+
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Rating</label>
+                        {{ form.rating(class="form-control") }}
+                        {% if form.rating.errors %}
+                            <div class="text-danger">
+                                {% for error in form.rating.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Category</label>
+                        {{ form.category(class="form-control") }}
+                        {% if form.category.errors %}
+                            <div class="text-danger">
+                                {% for error in form.category.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Comments</label>
+                        {{ form.comments(class="form-control", rows="5", placeholder="Share your detailed feedback about the hostel facilities, staff, food, or overall experience...") }}
+                        {% if form.comments.errors %}
+                            <div class="text-danger">
+                                {% for error in form.comments.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            Your feedback will be analyzed using AI to help us understand your sentiment and improve our services.
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

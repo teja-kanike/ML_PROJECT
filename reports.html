@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Reports - Hostel Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="dashboard-card">
+                <h2><i class="fas fa-chart-line me-2"></i>Generate Reports</h2>
+                <p class="text-muted mb-0">Comprehensive reports and analytics</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card text-center bg-primary text-white">
+                <div class="card-body">
+                    <h3>{{ total_students }}</h3>
+                    <p class="mb-0">Total Students</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center bg-success text-white">
+                <div class="card-body">
+                    <h3>{{ total_rooms }}</h3>
+                    <p class="mb-0">Total Rooms</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center bg-warning text-white">
+                <div class="card-body">
+                    <h3>{{ total_complaints }}</h3>
+                    <p class="mb-0">Total Complaints</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center bg-info text-white">
+                <div class="card-body">
+                    <h3>{{ total_feedback }}</h3>
+                    <p class="mb-0">Feedback</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center bg-secondary text-white">
+                <div class="card-body">
+                    <h3>₹{{ "%.1f"|format(total_revenue/1000) }}K</h3>
+                    <p class="mb-0">Revenue</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center bg-dark text-white">
+                <div class="card-body">
+                    <h3>{{ ((total_students / total_rooms * 100) if total_rooms > 0 else 0)|round(1) }}%</h3>
+                    <p class="mb-0">Occupancy</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Generation Buttons -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="dashboard-card">
+                <h4 class="mb-4"><i class="fas fa-download me-2"></i>Generate Reports</h4>
+                
+                <!-- Report Type Selection -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin_reports', type='all') }}" 
+                           class="btn btn-outline-primary w-100 {{ 'active' if report_type == 'all' else '' }}">
+                            <i class="fas fa-chart-bar me-2"></i>All Data
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin_reports', type='bookings') }}" 
+                           class="btn btn-outline-success w-100 {{ 'active' if report_type == 'bookings' else '' }}">
+                            <i class="fas fa-bed me-2"></i>Bookings
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin_reports', type='complaints') }}" 
+                           class="btn btn-outline-warning w-100 {{ 'active' if report_type == 'complaints' else '' }}">
+                            <i class="fas fa-exclamation-circle me-2"></i>Complaints
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin_reports', type='financial') }}" 
+                           class="btn btn-outline-info w-100 {{ 'active' if report_type == 'financial' else '' }}">
+                            <i class="fas fa-rupee-sign me-2"></i>Financial
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Export Buttons -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <form method="POST" class="d-grid">
+                            <button type="submit" name="generate_pdf" class="btn btn-danger btn-lg">
+                                <i class="fas fa-file-pdf me-2"></i>Download PDF Report
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <form method="POST" class="d-grid">
+                            <button type="submit" name="generate_excel" class="btn btn-success btn-lg">
+                                <i class="fas fa-file-excel me-2"></i>Download Excel Report
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Quick Print -->
+                <div class="row">
+                    <div class="col-12">
+                        <button onclick="window.print()" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-print me-2"></i>Print Current View
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Bookings -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="dashboard-card">
+                <h4 class="mb-4"><i class="fas fa-bed me-2"></i>Recent Bookings</h4>
+                {% if recent_bookings %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Room</th>
+                                <th>Student</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Status</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in recent_bookings %}
+                            <tr>
+                                <td>Room {{ booking.room.room_number }}</td>
+                                <td>{{ booking.student.full_name }}</td>
+                                <td>{{ booking.check_in_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ booking.check_out_date.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if booking.status == 'confirmed' else 'warning' if booking.status == 'pending' else 'secondary' }}">
+                                        {{ booking.status|title }}
+                                    </span>
+                                </td>
+                                <td>₹{{ booking.total_amount }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No recent bookings</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Complaints -->
+    <div class="row">
+        <div class="col">
+            <div class="dashboard-card">
+                <h4 class="mb-4"><i class="fas fa-exclamation-circle me-2"></i>Recent Complaints</h4>
+                {% if recent_complaints %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Student</th>
+                                <th>Category</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for complaint in recent_complaints %}
+                            <tr>
+                                <td>{{ complaint.title }}</td>
+                                <td>{{ complaint.student.full_name }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ complaint.category|title }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'danger' if complaint.priority == 'high' else 'warning' if complaint.priority == 'medium' else 'secondary' }}">
+                                        {{ complaint.priority|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if complaint.status == 'resolved' else 'warning' if complaint.status == 'in_progress' else 'primary' }}">
+                                        {{ complaint.status|title }}
+                                    </span>
+                                </td>
+                                <td>{{ complaint.created_at.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No recent complaints</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// JavaScript for report functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Add loading states to buttons
+    const pdfButton = document.querySelector('button[name="generate_pdf"]');
+    const excelButton = document.querySelector('button[name="generate_excel"]');
+    
+    if (pdfButton) {
+        pdfButton.addEventListener('click', function() {
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating PDF...';
+            this.disabled = true;
+        });
+    }
+    
+    if (excelButton) {
+        excelButton.addEventListener('click', function() {
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating Excel...';
+            this.disabled = true;
+        });
+    }
+    
+    // Auto-refresh data every 60 seconds
+    setInterval(() => {
+        window.location.reload();
+    }, 60000);
+});
+</script>
+
+<style>
+@media print {
+    .btn, .navbar, .dashboard-card .card-header {
+        display: none !important;
+    }
+    
+    .dashboard-card {
+        border: 1px solid #000 !important;
+        margin-bottom: 20px !important;
+    }
+}
+</style>
+{% endblock %}

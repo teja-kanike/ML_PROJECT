@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Book Room - Hostel Management System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="dashboard-card">
+                <h2 class="mb-4">
+                    <i class="fas fa-calendar-plus me-2"></i>Book Room {{ room.room_number }}
+                </h2>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Room Details</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Room Number:</strong> {{ room.room_number }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Seater Type:</strong> {{ room.seater_type }} Seater
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Monthly Fee:</strong> ₹{{ "%.2f"|format(room.monthly_fee) }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Status:</strong> 
+                                <span class="badge bg-success">Available</span>
+                            </div>
+                        </div>
+                        {% if room.amenities %}
+                        <div class="mt-2">
+                            <strong>Amenities:</strong> {{ room.amenities }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    
+                    <input type="hidden" name="room_id" value="{{ room.id }}">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Check-in Date</label>
+                            {{ form.check_in_date(class="form-control", type="date") }}
+                            {% if form.check_in_date.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.check_in_date.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Check-out Date</label>
+                            {{ form.check_out_date(class="form-control", type="date") }}
+                            {% if form.check_out_date.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.check_out_date.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Food Preference</label>
+                        {{ form.food_option(class="form-control") }}
+                        {% if form.food_option.errors %}
+                            <div class="text-danger">
+                                {% for error in form.food_option.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Price Calculation -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">Price Estimate</h6>
+                            <div id="price-estimate">
+                                <p class="text-muted">Select dates to see price calculation</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkInInput = document.querySelector('input[name="check_in_date"]');
+    const checkOutInput = document.querySelector('input[name="check_out_date"]');
+    const priceEstimate = document.getElementById('price-estimate');
+    const monthlyFee = {{ room.monthly_fee }};
+
+    function calculatePrice() {
+        const checkIn = new Date(checkInInput.value);
+        const checkOut = new Date(checkOutInput.value);
+        
+        if (checkIn && checkOut && checkOut > checkIn) {
+            const days = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+            const totalAmount = (monthlyFee / 30) * days;
+            
+            priceEstimate.innerHTML = `
+                <div class="row">
+                    <div class="col-6"><strong>Duration:</strong></div>
+                    <div class="col-6">${days} days</div>
+                </div>
+                <div class="row">
+                    <div class="col-6"><strong>Daily Rate:</strong></div>
+                    <div class="col-6">₹${(monthlyFee / 30).toFixed(2)}</div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-6"><strong>Total Amount:</strong></div>
+                    <div class="col-6"><strong>₹${totalAmount.toFixed(2)}</strong></div>
+                </div>
+            `;
+        }
+    }
+
+    checkInInput.addEventListener('change', calculatePrice);
+    checkOutInput.addEventListener('change', calculatePrice);
+});
+</script>
+{% endblock %}
+{% endblock %}

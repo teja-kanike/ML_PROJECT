@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback Analysis - Hostel Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="dashboard-card">
+                <h2 class="mb-4">
+                    <i class="fas fa-chart-bar me-2"></i>Feedback Analysis
+                </h2>
+                <p class="text-muted">AI-powered sentiment analysis of student feedback</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="dashboard-card text-center" style="border-left-color: #28a745;">
+                <h3 class="text-success">{{ total_feedback }}</h3>
+                <p class="mb-0">Total Feedback</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="dashboard-card text-center" style="border-left-color: #28a745;">
+                <h3 class="text-success">{{ positive_feedback }}</h3>
+                <p class="mb-0">Positive</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="dashboard-card text-center" style="border-left-color: #dc3545;">
+                <h3 class="text-danger">{{ negative_feedback }}</h3>
+                <p class="mb-0">Negative</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="dashboard-card text-center" style="border-left-color: #6c757d;">
+                <h3 class="text-secondary">{{ neutral_feedback }}</h3>
+                <p class="mb-0">Neutral</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Average Rating -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="dashboard-card text-center">
+                <h4>Average Rating</h4>
+                <div class="display-4 text-warning">
+                    {{ "%.1f"|format(avg_rating) }}/5.0
+                </div>
+                <div class="mt-2">
+                    {% for i in range(5) %}
+                        <i class="fas fa-star{{ ' text-warning' if i < avg_rating|int else '-o text-muted' }}"></i>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback List -->
+    <div class="row">
+        <div class="col">
+            <div class="dashboard-card">
+                <h4 class="mb-4">Recent Feedback</h4>
+                
+                {% if feedbacks %}
+                <div class="list-group">
+                    {% for feedback in feedbacks %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0">{{ feedback.student.full_name }}</h6>
+                                    <div>
+                                        <span class="badge bg-{{ 'success' if feedback.sentiment_label == 'positive' else 'danger' if feedback.sentiment_label == 'negative' else 'secondary' }}">
+                                            {{ feedback.sentiment_label|title }}
+                                        </span>
+                                        <span class="badge bg-info ms-1">{{ feedback.category|title }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    {% for i in range(5) %}
+                                        <i class="fas fa-star{{ ' text-warning' if i < feedback.rating else '-o text-muted' }}"></i>
+                                    {% endfor %}
+                                </div>
+                                
+                                <p class="mb-2">{{ feedback.comments }}</p>
+                                
+                                <div class="d-flex gap-3 text-muted small">
+                                    <span>Sentiment Score: {{ "%.2f"|format(feedback.sentiment_score or 0) }}</span>
+                                    <span>{{ feedback.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                    <h5>No Feedback Yet</h5>
+                    <p class="text-muted">No students have submitted feedback yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

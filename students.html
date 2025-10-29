@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Students - Hostel Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="dashboard-card">
+                <h2 class="mb-4">
+                    <i class="fas fa-users me-2"></i>Manage Students
+                </h2>
+                <p class="text-muted">View and manage all registered students</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="dashboard-card">
+                {% if students %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Full Name</th>
+                                <th>Enrollment No</th>
+                                <th>Stream</th>
+                                <th>Semester</th>
+                                <th>Phone</th>
+                                <th>Guardian</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>{{ student.id }}</td>
+                                <td>
+                                    <strong>{{ student.full_name }}</strong><br>
+                                    <small class="text-muted">{{ student.user.email }}</small>
+                                </td>
+                                <td>{{ student.enrollment_no }}</td>
+                                <td>{{ student.stream }}</td>
+                                <td>{{ student.semester }}</td>
+                                <td>{{ student.phone }}</td>
+                                <td>
+                                    <small>{{ student.guardian_name }}<br>{{ student.guardian_phone }}</small>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-warning">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h4>No Students Found</h4>
+                    <p class="text-muted">No students have registered yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

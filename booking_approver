@@ -1,0 +1,244 @@
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+import joblib
+import os
+from datetime import datetime, timedelta
+from models.db_models import db, Booking, Room, Student
+
+class BookingApprover:
+    def __init__(self):
+        self.model = None
+        self.scaler = None
+        self.is_trained = False
+        self.feature_names = [
+            'occupancy_rate', 'student_semester', 'room_demand', 
+            'booking_duration', 'season_factor', 'student_rating'
+        ]
+    
+    def generate_training_data(self):
+        """Generate training data for booking approval prediction"""
+        np.random.seed(42)
+        
+        data = []
+        
+        for _ in range(1000):
+            # Simulate different scenarios
+            occupancy_rate = np.random.uniform(30, 100)
+            student_semester = np.random.randint(1, 9)
+            room_demand = np.random.uniform(0.5, 2.0)  # Demand factor
+            booking_duration = np.random.randint(1, 365)
+            
+            # Season factor (higher in academic months)
+            current_month = datetime.now().month
+            season_factor = 1.2 if current_month in [1, 2, 8, 9] else 0.8
+            
+            # Student rating (simulated)
+            student_rating = np.random.uniform(3.0, 5.0)
+            
+            # Determine approval based on rules + randomness
+            approval_probability = (
+                (0.3 if occupancy_rate < 70 else 0.1) +  # Occupancy impact
+                (0.2 if student_semester >= 3 else 0.1) +  # Seniority preference
+                (0.2 if room_demand < 1.2 else 0.05) +  # Demand impact
+                (0.1 if booking_duration <= 180 else 0.05) +  # Duration preference
+                (0.2 if student_rating >= 4.0 else 0.05)  # Student reputation
+            )
+            
+            # Add some noise
+            approval_probability += np.random.normal(0, 0.1)
+            approval_probability = max(0, min(1, approval_probability))
+            
+            # Binary approval decision
+            approved = 1 if approval_probability > 0.5 else 0
+            
+            data.append({
+                'occupancy_rate': occupancy_rate,
+                'student_semester': student_semester,
+                'room_demand': room_demand,
+                'booking_duration': booking_duration,
+                'season_factor': season_factor,
+                'student_rating': student_rating,
+                'approved': approved
+            })
+        
+        return pd.DataFrame(data)
+    
+    def train_model(self):
+        """Train the booking approval model"""
+        try:
+            # Generate training data
+            df = self.generate_training_data()
+            
+            # Prepare features and target
+            X = df[self.feature_names]
+            y = df['approved']
+            
+            # Split data
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=42, stratify=y
+            )
+            
+            # Create and train model
+            self.model = RandomForestClassifier(
+                n_estimators=100,
+                random_state=42,
+                max_depth=10,
+                class_weight='balanced'
+            )
+            
+            self.model.fit(X_train, y_train)
+            self.is_trained = True
+            
+            # Evaluate model
+            train_score = self.model.score(X_train, y_train)
+            test_score = self.model.score(X_test, y_test)
+            
+            print(f"✅ Booking Approver trained! Train Accuracy: {train_score:.4f}, Test Accuracy: {test_score:.4f}")
+            
+            # Save model
+            os.makedirs('ml_models/trained_models', exist_ok=True)
+            joblib.dump(self.model, 'ml_models/trained_models/booking_approver.pkl')
+            
+        except Exception as e:
+            print(f"❌ Error training booking approver: {e}")
+    
+    def load_model(self):
+        """Load the trained model"""
+        try:
+            model_path = 'ml_models/trained_models/booking_approver.pkl'
+            if os.path.exists(model_path):
+                self.model = joblib.load(model_path)
+                self.is_trained = True
+                print("✅ Booking approver model loaded successfully!")
+                return True
+            else:
+                print("❌ No pre-trained booking approver model found. Training new model...")
+                self.train_model()
+                return self.is_trained
+        except Exception as e:
+            print(f"❌ Error loading booking approver: {e}")
+            return False
+    
+    def predict_booking_approval(self, booking, occupancy_rate):
+        """Predict if a booking should be automatically approved"""
+        if not self.is_trained and not self.load_model():
+            return self._fallback_approval(booking, occupancy_rate)
+        
+        try:
+            # Extract features for prediction
+            features = self._extract_features(booking, occupancy_rate)
+            
+            # Make prediction
+            prediction = self.model.predict([features])[0]
+            probability = self.model.predict_proba([features])[0][1]  # Probability of approval
+            
+            print(f"🤖 ML Features - Occupancy: {occupancy_rate}%, Semester: {booking.student.semester}, Duration: {(booking.check_out_date - booking.check_in_date).days} days")
+            print(f"🤖 ML Prediction - Approved: {bool(prediction)}, Confidence: {probability:.4f}")
+            
+            return {
+                'approved': bool(prediction),
+                'confidence': probability,
+                'features': dict(zip(self.feature_names, features)),
+                'method': 'ml_model'
+            }
+            
+        except Exception as e:
+            print(f"❌ Error in booking approval prediction: {e}")
+            return self._fallback_approval(booking, occupancy_rate)
+    
+    def _extract_features(self, booking, occupancy_rate):
+        """Extract features for ML prediction"""
+        # Get student information
+        student = booking.student
+        
+        # Calculate room demand (simplified - could be enhanced)
+        total_rooms = Room.query.count()
+        occupied_rooms = Booking.query.filter(
+            Booking.status.in_(['confirmed', 'completed'])
+        ).count()
+        room_demand = occupied_rooms / total_rooms if total_rooms > 0 else 1.0
+        
+        # Booking duration
+        booking_duration = (booking.check_out_date - booking.check_in_date).days
+        
+        # Season factor
+        current_month = datetime.now().month
+        season_factor = 1.2 if current_month in [1, 2, 8, 9] else 0.8
+        
+        # Student rating (simulated - could be based on past behavior)
+        student_rating = 4.0  # Default rating
+        
+        features = [
+            occupancy_rate,           # Current occupancy rate
+            student.semester,         # Student semester
+            room_demand,              # Room demand factor
+            booking_duration,         # Duration of booking
+            season_factor,            # Seasonal factor
+            student_rating            # Student rating
+        ]
+        
+        return features
+    
+    def _fallback_approval(self, booking, occupancy_rate):
+        """Fallback approval logic based on business rules"""
+        booking_duration = (booking.check_out_date - booking.check_in_date).days
+        
+        # Basic approval rules
+        approved = (
+            occupancy_rate < 80 and                    # Low occupancy
+            booking_duration <= 180 and                # Reasonable duration
+            booking.student.semester >= 2              # Not first semester
+        )
+        
+        print(f"🔄 Using fallback approval: {approved}")
+        
+        return {
+            'approved': approved,
+            'confidence': 0.7 if approved else 0.3,
+            'method': 'rule_based'
+        }
+    
+    def auto_approve_pending_bookings(self):
+        """Automatically approve pending bookings based on ML prediction"""
+        try:
+            from ml_models.occupancy_predictor import occupancy_predictor
+            
+            # Get current occupancy rate
+            current_occupancy = occupancy_predictor.predict_occupancy()
+            
+            # Get pending bookings
+            pending_bookings = Booking.query.filter_by(status='pending').all()
+            approved_count = 0
+            
+            print(f"🤖 Checking {len(pending_bookings)} pending bookings for auto-approval...")
+            
+            for booking in pending_bookings:
+                # Get ML prediction
+                prediction = self.predict_booking_approval(booking, current_occupancy)
+                
+                # Auto-approve if confident enough
+                if prediction['approved'] and prediction['confidence'] > 0.6:
+                    booking.status = 'confirmed'
+                    booking.room.is_available = False
+                    approved_count += 1
+                    
+                    print(f"✅ Auto-approved booking {booking.id} for {booking.student.full_name}")
+                    print(f"   Confidence: {prediction['confidence']:.4f}, Method: {prediction['method']}")
+            
+            if approved_count > 0:
+                db.session.commit()
+                print(f"🎉 Auto-approved {approved_count} pending bookings!")
+            else:
+                print("ℹ️ No bookings met the auto-approval criteria")
+            
+            return approved_count
+            
+        except Exception as e:
+            print(f"❌ Error in auto-approving bookings: {e}")
+            return 0
+
+# Initialize global booking approver
+booking_approver = BookingApprover()
